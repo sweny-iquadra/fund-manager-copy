@@ -11,6 +11,14 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### December 2024
+- **Mobile App Created**: Complete React Native mobile app in `/mobile` folder using Expo SDK 51
+  - Full authentication flow (Login, Register, Welcome screens)
+  - Home dashboard, Contests, Portfolio, Leaderboard, Account screens
+  - Admin screens for contest management
+  - Same FinanceFantasy branding (blue #2196F3 primary, gold #F5A623 accent)
+  - React Navigation with tab navigator and nested stacks
+  - TanStack Query for data fetching
+  - Secure token storage with expo-secure-store
 - Added comprehensive local development setup with README.md and setup guides
 - Created alternative authentication system for local development (localAuth.ts)
 - Added Docker Compose configuration for easy local setup
@@ -20,13 +28,23 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
+### Frontend Architecture (Web)
 - **Framework**: React 18 with TypeScript
 - **Routing**: Wouter for client-side routing
 - **State Management**: TanStack Query for server state management
 - **UI Components**: Radix UI components with shadcn/ui styling
 - **Styling**: Tailwind CSS with custom design tokens
 - **Build Tool**: Vite for development and production builds
+
+### Mobile App Architecture
+- **Location**: `/mobile` folder (separate from web code)
+- **Framework**: React Native with Expo SDK 51
+- **Navigation**: React Navigation (Stack + Bottom Tabs)
+- **State Management**: TanStack Query for server state
+- **Styling**: Custom theme system in `src/lib/theme.ts`
+- **Storage**: Expo SecureStore for secure token storage
+- **Icons**: Expo Vector Icons (Ionicons)
+- **Colors**: Primary blue (#2196F3), Accent gold (#F5A623)
 
 ### Backend Architecture
 - **Framework**: Express.js with TypeScript

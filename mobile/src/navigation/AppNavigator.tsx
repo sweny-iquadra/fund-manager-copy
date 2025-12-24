@@ -54,6 +54,12 @@ const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const ContestsStack = createNativeStackNavigator<ContestsStackParamList>();
 
 function AuthNavigator() {
+  const { refreshUser } = useAuth();
+
+  const handleAuthSuccess = async () => {
+    await refreshUser();
+  };
+
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Welcome">
@@ -68,7 +74,7 @@ function AuthNavigator() {
         {({ navigation }) => (
           <LoginScreen
             onRegister={() => navigation.navigate('Register')}
-            onSuccess={() => {}}
+            onSuccess={handleAuthSuccess}
           />
         )}
       </AuthStack.Screen>
@@ -76,7 +82,7 @@ function AuthNavigator() {
         {({ navigation }) => (
           <RegisterScreen
             onLogin={() => navigation.navigate('Login')}
-            onSuccess={() => {}}
+            onSuccess={handleAuthSuccess}
           />
         )}
       </AuthStack.Screen>

@@ -65,21 +65,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initialize();
   }, [refreshUser]);
 
-  const login = async (email: string, password: string) => {
-    const response = await authApi.login(email, password);
-    await storage.setTokens(response.accessToken, response.refreshToken);
-    await storage.setUser(response.user);
-    setUser(response.user);
+  const login = async (email: string, password: string): Promise<void> => {
+    try {
+      const response = await authApi.login(email, password);
+      await storage.setTokens(response.accessToken, response.refreshToken);
+      await storage.setUser(response.user);
+      setUser(response.user);
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   };
 
-  const register = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
-    const response = await authApi.register(data);
-    await storage.setTokens(response.accessToken, response.refreshToken);
-    await storage.setUser(response.user);
-    setUser(response.user);
+  const register = async (data: { email: string; password: string; firstName: string; lastName: string }): Promise<void> => {
+    try {
+      const response = await authApi.register(data);
+      await storage.setTokens(response.accessToken, response.refreshToken);
+      await storage.setUser(response.user);
+      setUser(response.user);
+    } catch (error) {
+      console.error('Register error:', error);
+      throw error;
+    }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       await authApi.logout();
     } catch (error) {
