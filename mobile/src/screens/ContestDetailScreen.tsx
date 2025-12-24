@@ -49,9 +49,25 @@ export function ContestDetailScreen({
   const joinMutation = useMutation({
     mutationFn: () => contestsApi.join(contestId),
     onSuccess: () => {
+      // Optimistically mark as joined so the Join button hides immediately
+      queryClient.setQueryData(['contest', contestId], (existing: any) => {
+        if (!existing) return existing;
+        return {
+          ...existing,
+          userParticipating: true,
+          participantCount: (existing.participantCount || 0) + 1,
+        };
+      });
       queryClient.invalidateQueries({ queryKey: ['contest', contestId] });
       queryClient.invalidateQueries({ queryKey: ['contests'] });
-      Alert.alert('Success', 'You have joined the contest!');
+      Alert.alert('Success', 'You have joined the contest!', [
+        {
+          text: 'Manage Portfolio',
+          onPress: () => onNavigateToPortfolio(contestId),
+        },
+      ]);
+      // Also navigate right away to mirror web flow
+      onNavigateToPortfolio(contestId);
     },
     onError: (error: any) => {
       Alert.alert('Error', error.message || 'Failed to join contest');

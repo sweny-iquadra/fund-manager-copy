@@ -22,12 +22,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 interface HomeScreenProps {
   onNavigateToContests: () => void;
+  onNavigateToCreateContest: () => void;
   onNavigateToContest: (id: number) => void;
   onNavigateToLeaderboard: () => void;
 }
 
 export function HomeScreen({
   onNavigateToContests,
+  onNavigateToCreateContest,
   onNavigateToContest,
   onNavigateToLeaderboard,
 }: HomeScreenProps) {
@@ -122,18 +124,53 @@ export function HomeScreen({
         </View>
 
         <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={onNavigateToContests}>
-            <View style={[styles.actionIcon, { backgroundColor: colors.primary + '15' }]}>
-              <Ionicons name="search-outline" size={24} color={colors.primary} />
+          <View style={styles.quickActionsHeader}>
+            <View>
+              <Text style={styles.quickActionsTitle}>Quick Actions</Text>
+              <Text style={styles.quickActionsSubtitle}>Join or create a contest in seconds.</Text>
             </View>
-            <Text style={styles.actionText}>Browse Contests</Text>
+            <View style={[styles.actionIcon, { backgroundColor: colors.primary + '15' }]}>
+              <Ionicons name="flash-outline" size={20} color={colors.primary} />
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.joinAction]}
+            onPress={onNavigateToContests}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: colors.primary + '12' }]}>
+              <Ionicons name="trophy-outline" size={22} color={colors.primary} />
+            </View>
+            <View style={styles.actionTextWrapper}>
+              <Text style={styles.actionTitle}>Join a Contest</Text>
+              <Text style={styles.actionSubtitle}>Find open contests to start competing</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.createAction]}
+            onPress={onNavigateToCreateContest}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: colors.accent + '12' }]}>
+              <Ionicons name="add-circle-outline" size={22} color={colors.accent} />
+            </View>
+            <View style={styles.actionTextWrapper}>
+              <Text style={styles.actionTitle}>Create a Contest</Text>
+              <Text style={styles.actionSubtitle}>Set the rules and invite others</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton} onPress={onNavigateToLeaderboard}>
-            <View style={[styles.actionIcon, { backgroundColor: colors.accent + '15' }]}>
-              <Ionicons name="podium-outline" size={24} color={colors.accent} />
+            <View style={[styles.actionIcon, { backgroundColor: colors.primary + '15' }]}>
+              <Ionicons name="podium-outline" size={22} color={colors.primary} />
             </View>
-            <Text style={styles.actionText}>Leaderboards</Text>
+            <View style={styles.actionTextWrapper}>
+              <Text style={styles.actionTitle}>Leaderboards</Text>
+              <Text style={styles.actionSubtitle}>See who is leading across contests</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -247,21 +284,44 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   quickActions: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     paddingHorizontal: spacing.lg,
-    marginTop: spacing.lg,
+    marginTop: spacing.xl,
     gap: spacing.md,
   },
+  quickActionsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  quickActionsTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+  },
+  quickActionsSubtitle: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
   actionButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
+    width: '100%',
     ...shadows.sm,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  joinAction: {
+    borderColor: colors.primary + '30',
+    backgroundColor: colors.primary + '08',
+  },
+  createAction: {
+    borderColor: colors.accent + '30',
+    backgroundColor: colors.accent + '10',
   },
   actionIcon: {
     width: 44,
@@ -271,11 +331,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: spacing.sm,
   },
-  actionText: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.medium,
-    color: colors.text,
+  actionTextWrapper: {
     flex: 1,
+  },
+  actionTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+  },
+  actionSubtitle: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
   section: {
     paddingHorizontal: spacing.lg,

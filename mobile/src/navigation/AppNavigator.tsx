@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +16,7 @@ import { ContestDetailScreen } from '@/screens/ContestDetailScreen';
 import { PortfolioScreen } from '@/screens/PortfolioScreen';
 import { LeaderboardScreen } from '@/screens/LeaderboardScreen';
 import { AccountScreen } from '@/screens/AccountScreen';
+import { CreateContestScreen } from '@/screens/admin/CreateContestScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -30,7 +31,8 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   HomeTab: undefined;
-  ContestsTab: undefined;
+  ContestsTab: NavigatorScreenParams<ContestsStackParamList> | undefined;
+  PortfolioTab: NavigatorScreenParams<PortfolioStackParamList> | undefined;
   LeaderboardTab: undefined;
   AccountTab: undefined;
 };
@@ -45,6 +47,11 @@ export type ContestsStackParamList = {
   Contests: undefined;
   ContestDetail: { contestId: number };
   Portfolio: { contestId: number };
+  CreateContest: undefined;
+};
+
+export type PortfolioStackParamList = {
+  Portfolio: { contestId?: number } | undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -52,6 +59,7 @@ const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const ContestsStack = createNativeStackNavigator<ContestsStackParamList>();
+const PortfolioStack = createNativeStackNavigator<PortfolioStackParamList>();
 
 function AuthNavigator() {
   const { refreshUser } = useAuth();
@@ -101,6 +109,9 @@ function HomeStackNavigator() {
         {({ navigation }) => (
           <HomeScreen
             onNavigateToContests={() => navigation.getParent()?.navigate('ContestsTab')}
+            onNavigateToCreateContest={() =>
+              navigation.getParent()?.navigate('ContestsTab', { screen: 'CreateContest' })
+            }
             onNavigateToContest={(id) => navigation.navigate('ContestDetail', { contestId: id })}
             onNavigateToLeaderboard={() => navigation.getParent()?.navigate('LeaderboardTab')}
           />
@@ -158,7 +169,37 @@ function ContestsStackNavigator() {
           />
         )}
       </ContestsStack.Screen>
+      <ContestsStack.Screen
+        name="CreateContest"
+        options={{ headerShown: true, title: 'Create Contest' }}
+      >
+        {({ navigation }) => (
+          <CreateContestScreen
+            onGoBack={() => navigation.goBack()}
+            onSuccess={() => navigation.goBack()}
+          />
+        )}
+      </ContestsStack.Screen>
     </ContestsStack.Navigator>
+  );
+}
+
+function PortfolioStackNavigator() {
+  return (
+    <PortfolioStack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <PortfolioStack.Screen name="Portfolio" options={{ headerShown: true, title: 'Portfolio' }}>
+        {({ navigation, route }) => (
+          <PortfolioScreen
+            contestId={(route.params as any)?.contestId}
+            onGoBack={() => navigation.getParent()?.navigate('ContestsTab')}
+          />
+        )}
+      </PortfolioStack.Screen>
+    </PortfolioStack.Navigator>
   );
 }
 
@@ -174,6 +215,8 @@ function MainTabNavigator() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'ContestsTab') {
             iconName = focused ? 'trophy' : 'trophy-outline';
+          } else if (route.name === 'PortfolioTab') {
+            iconName = focused ? 'briefcase' : 'briefcase-outline';
           } else if (route.name === 'LeaderboardTab') {
             iconName = focused ? 'podium' : 'podium-outline';
           } else if (route.name === 'AccountTab') {
@@ -206,6 +249,11 @@ function MainTabNavigator() {
         name="ContestsTab"
         component={ContestsStackNavigator}
         options={{ tabBarLabel: 'Contests' }}
+      />
+      <Tab.Screen
+        name="PortfolioTab"
+        component={PortfolioStackNavigator}
+        options={{ tabBarLabel: 'Portfolio' }}
       />
       <Tab.Screen
         name="LeaderboardTab"
