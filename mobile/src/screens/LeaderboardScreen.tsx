@@ -17,7 +17,6 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
-import { Picker } from '@react-native-picker/picker';
 
 interface LeaderboardScreenProps {
   onNavigateToContest: (id: number) => void;
