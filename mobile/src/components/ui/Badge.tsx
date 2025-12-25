@@ -7,12 +7,15 @@ interface BadgeProps {
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'outline';
   size?: 'sm' | 'md';
   style?: ViewStyle;
+  textStyle?: any;
 }
 
-export function Badge({ label, variant = 'default', size = 'md', style }: BadgeProps) {
+export function Badge({ label, variant = 'default', size = 'md', style, textStyle }: BadgeProps) {
   return (
     <View style={[styles.badge, styles[variant], styles[`size_${size}`], style]}>
-      <Text style={[styles.text, styles[`text_${variant}`], styles[`textSize_${size}`]]}>
+      <Text
+        style={[styles.text, styles[`text_${variant}`], styles[`textSize_${size}`], textStyle]}
+      >
         {label}
       </Text>
     </View>
@@ -54,6 +57,8 @@ const styles = StyleSheet.create({
   },
   text: {
     fontWeight: fontWeight.medium,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   text_default: {
     color: colors.textSecondary,

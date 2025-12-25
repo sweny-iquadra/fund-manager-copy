@@ -100,10 +100,12 @@ export const contestsApi = {
   join: (id: number) => api.post<any>(`/api/contests/${id}/join`),
   
   leave: (id: number) => api.delete<any>(`/api/contests/${id}/leave`),
-  
-  create: (data: any) => api.post<any>('/api/contests', data),
-  
+
   getLeaderboard: (id: number) => api.get<any[]>(`/api/contests/${id}/leaderboard`),
+};
+
+export const contestRequestsApi = {
+  create: (data: any) => api.post<any>('/api/contest-requests', data),
 };
 
 export const portfolioApi = {

@@ -291,11 +291,11 @@ export function PortfolioScreen({ contestId: initialContestId, onGoBack }: Portf
     <Card style={styles.summaryCard}>
       <CardHeader>
         <View style={styles.summaryHeaderRow}>
-          <View style={styles.cardHeaderRow}>
+          <View style={[styles.cardHeaderRow, styles.summaryTitleContainer]}>
             <Ionicons name="pie-chart" size={20} color={colors.primary} />
             <Text style={styles.cardTitle}>{contest?.contestName}</Text>
           </View>
-          <Badge label={contest?.category?.name || ''} variant="outline" />
+          <Badge label={contest?.category?.name || ''} variant="outline" style={styles.summaryBadge} />
         </View>
       </CardHeader>
       <CardContent>
@@ -767,6 +767,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  summaryTitleContainer: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: spacing.sm,
+  },
+  summaryBadge: {
+    alignSelf: 'flex-start',
+    flexShrink: 1,
   },
   summaryGrid: {
     flexDirection: 'row',

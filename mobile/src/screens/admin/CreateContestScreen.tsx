@@ -11,10 +11,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '@/lib/theme';
-import { modesApi, categoriesApi, contestsApi } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
+import { modesApi, categoriesApi, contestRequestsApi } from '@/lib/api';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -25,8 +25,93 @@ interface CreateContestScreenProps {
   onSuccess: () => void;
 }
 
+type DateTimeFieldProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  helperText: string;
+  error?: string;
+};
+
+const DateTimeField = ({ label, value, onChange, helperText, error }: DateTimeFieldProps) => {
+  const [showIOSPicker, setShowIOSPicker] = useState(false);
+
+  const currentDate = value ? new Date(value) : new Date();
+
+  const formatDisplay = () => {
+    if (!value) return 'Select date & time';
+    try {
+      return new Date(value).toLocaleString();
+    } catch {
+      return value;
+    }
+  };
+
+  const handleAndroidPickers = () => {
+    DateTimePickerAndroid.open({
+      value: currentDate,
+      mode: 'date',
+      onChange: (event, selectedDate) => {
+        if (event.type === 'set' && selectedDate) {
+          DateTimePickerAndroid.open({
+            value: selectedDate,
+            mode: 'time',
+            onChange: (timeEvent, selectedTime) => {
+              if (timeEvent.type === 'set' && selectedTime) {
+                const combined = new Date(selectedDate);
+                combined.setHours(selectedTime.getHours());
+                combined.setMinutes(selectedTime.getMinutes());
+                combined.setSeconds(0);
+                combined.setMilliseconds(0);
+                onChange(combined.toISOString());
+              }
+            },
+          });
+        }
+      },
+    });
+  };
+
+  const handleIOSChange = (_event: any, selectedDate?: Date) => {
+    if (selectedDate) {
+      onChange(selectedDate.toISOString());
+    }
+    setShowIOSPicker(false);
+  };
+
+  const openPicker = () => {
+    if (Platform.OS === 'android') {
+      handleAndroidPickers();
+    } else {
+      setShowIOSPicker(true);
+    }
+  };
+
+  return (
+    <View style={styles.dateFieldContainer}>
+      <Text style={styles.dateLabel}>{label}</Text>
+      <TouchableOpacity style={[styles.dateInput, error && styles.inputError]} onPress={openPicker}>
+        <Text style={value ? styles.dateValue : styles.datePlaceholder}>{formatDisplay()}</Text>
+      </TouchableOpacity>
+      {error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : (
+        <Text style={styles.helperText}>{helperText}</Text>
+      )}
+
+      {showIOSPicker && (
+        <DateTimePicker
+          value={currentDate}
+          mode="datetime"
+          display="spinner"
+          onChange={handleIOSChange}
+        />
+      )}
+    </View>
+  );
+};
+
 export function CreateContestScreen({ onGoBack, onSuccess }: CreateContestScreenProps) {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const [contestName, setContestName] = useState('');
@@ -36,6 +121,10 @@ export function CreateContestScreen({ onGoBack, onSuccess }: CreateContestScreen
   const [entryFee, setEntryFee] = useState('0.00');
   const [prizePool, setPrizePool] = useState('0.00');
   const [maxParticipants, setMaxParticipants] = useState('');
+  const [openDate, setOpenDate] = useState('');
+  const [closeDate, setCloseDate] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { data: modes, isLoading: modesLoading } = useQuery({
@@ -49,10 +138,13 @@ export function CreateContestScreen({ onGoBack, onSuccess }: CreateContestScreen
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => contestsApi.create(data),
+    mutationFn: (data: any) => contestRequestsApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contests'] });
-      Alert.alert('Success', 'Contest request submitted successfully!');
+      Alert.alert(
+        'Success',
+        "Contest request submitted for approval. You'll be notified when it's reviewed."
+      );
       onSuccess();
     },
     onError: (error: any) => {
@@ -62,9 +154,23 @@ export function CreateContestScreen({ onGoBack, onSuccess }: CreateContestScreen
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
+    const isValidDate = (value: string) => value && !isNaN(new Date(value).getTime());
+    const isValidAmount = (value: string, allowZero = false) => {
+      const parsed = parseFloat(value);
+      if (isNaN(parsed)) return false;
+      return allowZero ? parsed >= 0 : parsed > 0;
+    };
+
     if (!contestName.trim()) newErrors.contestName = 'Contest name is required';
     if (!selectedModeId) newErrors.mode = 'Please select a mode';
     if (!selectedCategoryId) newErrors.category = 'Please select a category';
+    if (!isValidAmount(entryFee, true)) newErrors.entryFee = 'Entry fee must be a valid number';
+    if (!isValidAmount(prizePool)) newErrors.prizePool = 'Prize pool must be greater than 0';
+    if (!isValidDate(openDate)) newErrors.openDate = 'Enter a valid registration open date/time';
+    if (!isValidDate(closeDate)) newErrors.closeDate = 'Enter a valid registration close date/time';
+    if (!isValidDate(startDate)) newErrors.startDate = 'Enter a valid contest start date/time';
+    if (!isValidDate(endDate)) newErrors.endDate = 'Enter a valid contest end date/time';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -72,24 +178,23 @@ export function CreateContestScreen({ onGoBack, onSuccess }: CreateContestScreen
   const handleSubmit = () => {
     if (!validate()) return;
 
-    const now = new Date();
-    const openDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const closeDate = new Date(openDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const startDate = closeDate;
-    const endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const formatCurrency = (value: string) => {
+      const parsed = parseFloat(value || '0');
+      return (isNaN(parsed) ? 0 : parsed).toFixed(2);
+    };
 
     createMutation.mutate({
       contestName,
       modeId: selectedModeId,
       categoryId: selectedCategoryId,
       contestType,
-      entryFee,
-      prizePool,
-      maxParticipants: maxParticipants ? parseInt(maxParticipants) : null,
-      openDate: openDate.toISOString(),
-      closeDate: closeDate.toISOString(),
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
+      entryFee: formatCurrency(entryFee),
+      prizePool: formatCurrency(prizePool),
+      maxParticipants: maxParticipants ? parseInt(maxParticipants) : undefined,
+      openDate: new Date(openDate).toISOString(),
+      closeDate: new Date(closeDate).toISOString(),
+      startDate: new Date(startDate).toISOString(),
+      endDate: new Date(endDate).toISOString(),
     });
   };
 
@@ -252,6 +357,7 @@ export function CreateContestScreen({ onGoBack, onSuccess }: CreateContestScreen
                     onChangeText={setEntryFee}
                     placeholder="0.00"
                     keyboardType="decimal-pad"
+                    error={errors.entryFee}
                   />
                 </View>
                 <View style={styles.priceField}>
@@ -261,6 +367,7 @@ export function CreateContestScreen({ onGoBack, onSuccess }: CreateContestScreen
                     onChangeText={setPrizePool}
                     placeholder="0.00"
                     keyboardType="decimal-pad"
+                    error={errors.prizePool}
                   />
                 </View>
               </View>
@@ -275,20 +382,50 @@ export function CreateContestScreen({ onGoBack, onSuccess }: CreateContestScreen
             </CardContent>
           </Card>
 
+          <Card style={styles.formCard}>
+            <CardHeader>
+              <Text style={styles.cardTitle}>Schedule</Text>
+            </CardHeader>
+            <CardContent>
+              <DateTimeField
+                label="Registration Opens"
+                value={openDate}
+                onChange={setOpenDate}
+                helperText="When participants can start joining"
+                error={errors.openDate}
+              />
+              <DateTimeField
+                label="Registration Closes"
+                value={closeDate}
+                onChange={setCloseDate}
+                helperText="Last chance to join and submit allocations"
+                error={errors.closeDate}
+              />
+              <DateTimeField
+                label="Contest Starts"
+                value={startDate}
+                onChange={setStartDate}
+                helperText="When the trading period begins"
+                error={errors.startDate}
+              />
+              <DateTimeField
+                label="Contest Ends"
+                value={endDate}
+                onChange={setEndDate}
+                helperText="When the trading period ends"
+                error={errors.endDate}
+              />
+            </CardContent>
+          </Card>
+
           <Button
-            title={user?.isSuperAdmin ? 'Create Contest' : 'Submit for Approval'}
+            title="Create Contest"
             onPress={handleSubmit}
             loading={createMutation.isPending}
             fullWidth
             size="lg"
             style={styles.submitButton}
           />
-
-          {!user?.isSuperAdmin && (
-            <Text style={styles.infoText}>
-              Your contest request will be reviewed by a super admin before becoming active.
-            </Text>
-          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -412,10 +549,37 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: spacing.md,
   },
-  infoText: {
+  dateFieldContainer: {
+    marginBottom: spacing.md,
+  },
+  dateLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.medium,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  dateInput: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    backgroundColor: colors.background,
+  },
+  dateValue: {
+    fontSize: fontSize.md,
+    color: colors.text,
+  },
+  datePlaceholder: {
+    fontSize: fontSize.md,
+    color: colors.textMuted,
+  },
+  helperText: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: spacing.md,
+    marginTop: spacing.xs,
+  },
+  inputError: {
+    borderColor: colors.error,
   },
 });
