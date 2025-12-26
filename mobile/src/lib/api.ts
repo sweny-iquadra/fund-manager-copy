@@ -142,3 +142,11 @@ export const stocksApi = {
   
   getQuote: (symbol: string) => api.get<any>(`/api/stocks/quote/${symbol}`),
 };
+
+export const assetsApi = {
+  search: (query: string, category?: string) => {
+    const params = new URLSearchParams({ q: query });
+    if (category) params.append('category', category);
+    return api.get<any[]>(`/api/assets/search?${params}`);
+  },
+};

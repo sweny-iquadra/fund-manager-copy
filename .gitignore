@@ -149,3 +149,24 @@ server/public
 
 # Uploaded Files
 uploads/
+
+# Expo / React Native (mobile app)
+.expo
+.expo-shared
+*.expo.dev.json
+*.expo.dev.js
+*.aab
+*.apk
+*.ipa
+*.app.dSYM
+*.xml
+*.keystore
+*.webp
+*.kt
+
+.vscode
+mobile/.npm
+mobile/.turbo
+mobile/android
+mobile/ios
+

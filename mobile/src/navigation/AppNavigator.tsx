@@ -16,6 +16,7 @@ import { ContestDetailScreen } from '@/screens/ContestDetailScreen';
 import { PortfolioScreen } from '@/screens/PortfolioScreen';
 import { LeaderboardScreen } from '@/screens/LeaderboardScreen';
 import { AccountScreen } from '@/screens/AccountScreen';
+import { UploadDemoScreen } from '@/screens/UploadDemoScreen';
 import { CreateContestScreen } from '@/screens/admin/CreateContestScreen';
 
 export type RootStackParamList = {
@@ -35,6 +36,7 @@ export type MainTabParamList = {
   PortfolioTab: NavigatorScreenParams<PortfolioStackParamList> | undefined;
   LeaderboardTab: undefined;
   AccountTab: undefined;
+  UploadDemoTab: undefined;
 };
 
 export type HomeStackParamList = {
@@ -221,6 +223,8 @@ function MainTabNavigator() {
             iconName = focused ? 'podium' : 'podium-outline';
           } else if (route.name === 'AccountTab') {
             iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'UploadDemoTab') {
+            iconName = focused ? 'cloud-upload' : 'cloud-upload-outline';
           } else {
             iconName = 'ellipse';
           }
@@ -275,6 +279,12 @@ function MainTabNavigator() {
         options={{ tabBarLabel: 'Account' }}
       >
         {() => <AccountScreen onLogout={() => {}} />}
+      </Tab.Screen>
+      <Tab.Screen
+        name="UploadDemoTab"
+        options={{ tabBarLabel: 'Upload Demo' }}
+      >
+        {() => <UploadDemoScreen />}
       </Tab.Screen>
     </Tab.Navigator>
   );

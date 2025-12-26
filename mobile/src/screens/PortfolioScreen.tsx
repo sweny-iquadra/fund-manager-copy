@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Picker } from '@react-native-picker/picker';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '@/lib/theme';
-import { portfolioApi, stocksApi, contestsApi, api } from '@/lib/api';
+import { portfolioApi, stocksApi, contestsApi, api, assetsApi } from '@/lib/api';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Loading } from '@/components/ui/Loading';
@@ -93,8 +93,8 @@ export function PortfolioScreen({ contestId: initialContestId, onGoBack }: Portf
   });
 
   const { data: searchResults, isLoading: searchLoading } = useQuery({
-    queryKey: ['stocks', 'search', searchQuery],
-    queryFn: () => stocksApi.search(searchQuery, contest?.category?.name),
+    queryKey: ['assets', 'search', searchQuery, contest?.category?.name],
+    queryFn: () => assetsApi.search(searchQuery, contest?.category?.name),
     enabled: searchQuery.length >= 2,
   });
 
@@ -395,7 +395,7 @@ export function PortfolioScreen({ contestId: initialContestId, onGoBack }: Portf
                   >
                     <View>
                       <Text style={styles.stockSymbol}>{stock.symbol}</Text>
-                      <Text style={styles.stockName} numberOfLines={1}>{stock.name}</Text>
+                      <Text style={styles.stockName} numberOfLines={1}>{stock.name || stock.companyName}</Text>
                     </View>
                     <Ionicons name="add-circle-outline" size={24} color={colors.primary} />
                   </TouchableOpacity>
