@@ -8,9 +8,10 @@ import { LeaderboardEntry } from '@/lib/types';
 interface LeaderboardRowProps {
   entry: LeaderboardEntry;
   isCurrentUser?: boolean;
+  prizePool?: number;
 }
 
-export function LeaderboardRow({ entry, isCurrentUser }: LeaderboardRowProps) {
+export function LeaderboardRow({ entry, isCurrentUser, prizePool }: LeaderboardRowProps) {
   const formatCurrency = (value: string) => {
     return parseFloat(value).toLocaleString('en-US', {
       style: 'currency',
@@ -41,6 +42,17 @@ export function LeaderboardRow({ entry, isCurrentUser }: LeaderboardRowProps) {
   const totalReturn = parseFloat(entry.totalReturn);
   const isPositive = totalReturn >= 0;
 
+  const formatPrize = (rank: number) => {
+    if (!prizePool || prizePool <= 0) return null;
+    const pool = prizePool;
+    if (rank === 1) return pool * 0.5;
+    if (rank === 2) return pool * 0.3;
+    if (rank === 3) return pool * 0.2;
+    return null;
+  };
+
+  const prizeAmount = formatPrize(entry.ranking);
+
   return (
     <View style={[styles.row, isCurrentUser && styles.currentUser]}>
       <View style={styles.rankContainer}>{getRankBadge(entry.ranking)}</View>
@@ -66,6 +78,9 @@ export function LeaderboardRow({ entry, isCurrentUser }: LeaderboardRowProps) {
         <Text style={[styles.returnAmount, isPositive ? styles.gain : styles.loss]}>
           {isPositive ? '+' : ''}{formatCurrency(entry.totalReturnAmount)}
         </Text>
+        {prizeAmount !== null && (
+          <Text style={styles.prizeText}>Prize: {formatCurrency(prizeAmount.toString())}</Text>
+        )}
       </View>
     </View>
   );
@@ -116,6 +131,11 @@ const styles = StyleSheet.create({
   },
   returnAmount: {
     fontSize: fontSize.sm,
+    marginTop: 2,
+  },
+  prizeText: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   gain: {

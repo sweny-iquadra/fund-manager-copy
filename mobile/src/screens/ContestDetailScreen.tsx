@@ -20,7 +20,7 @@ import {
   borderRadius,
   gradients,
 } from "@/lib/theme";
-import { contestsApi } from "@/lib/api";
+import { contestsApi, api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -61,6 +61,11 @@ export function ContestDetailScreen({
     enabled: !!contest,
   });
 
+  const { data: participations } = useQuery({
+    queryKey: ["user-participations"],
+    queryFn: () => api.get<any[]>("/api/user/participations"),
+  });
+
   const joinMutation = useMutation({
     mutationFn: () => contestsApi.join(contestId),
     onSuccess: () => {
@@ -84,18 +89,6 @@ export function ContestDetailScreen({
     },
     onError: (error: any) => {
       Alert.alert("Error", error.message || "Failed to join contest");
-    },
-  });
-
-  const leaveMutation = useMutation({
-    mutationFn: () => contestsApi.leave(contestId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contest", contestId] });
-      queryClient.invalidateQueries({ queryKey: ["contests"] });
-      Alert.alert("Success", "You have left the contest");
-    },
-    onError: (error: any) => {
-      Alert.alert("Error", error.message || "Failed to leave contest");
     },
   });
 
@@ -173,7 +166,9 @@ export function ContestDetailScreen({
     );
   }
 
-  const isParticipating = contest.userParticipating;
+  const isParticipating =
+    !!contest.userParticipating ||
+    !!participations?.some((p: any) => p.contestId === contestId);
   const isActive =
     new Date(contest.startDate) <= new Date() &&
     new Date(contest.endDate) >= new Date();
@@ -505,14 +500,6 @@ export function ContestDetailScreen({
         showsVerticalScrollIndicator={false}
       >
         <LinearGradient colors={gradients.financial} style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={onGoBack}>
-            <Ionicons
-              name="arrow-back"
-              size={24}
-              color={colors.textOnPrimary}
-            />
-          </TouchableOpacity>
-
           <View style={styles.headerTop}>
             <Badge
               label={contest.status.toUpperCase()}
@@ -581,34 +568,7 @@ export function ContestDetailScreen({
         <View style={styles.content}>
           <View style={styles.actions}>
             {isParticipating ? (
-              <>
-                <Button
-                  title="Manage Portfolio"
-                  onPress={() => onNavigateToPortfolio(contestId)}
-                  fullWidth
-                  size="lg"
-                  icon={
-                    <Ionicons
-                      name="pie-chart"
-                      size={20}
-                      color={colors.textOnPrimary}
-                    />
-                  }
-                />
-                <Button
-                  title="View Leaderboard"
-                  onPress={() => setActiveTab("leaderboard")}
-                  variant="outline"
-                  fullWidth
-                  icon={
-                    <Ionicons
-                      name="trending-up"
-                      size={20}
-                      color={colors.primary}
-                    />
-                  }
-                />
-              </>
+              <></>
             ) : canJoin ? (
               <Button
                 title={`Join Contest - ${formatCurrency(contest.entryFee)}`}
@@ -631,29 +591,7 @@ export function ContestDetailScreen({
                 fullWidth
                 onPress={() => {}}
               />
-            )}
-            {canLeave && (
-              <Button
-                title="Leave Contest"
-                onPress={() => {
-                  Alert.alert(
-                    "Leave Contest",
-                    "Are you sure you want to leave this contest?",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Leave",
-                        style: "destructive",
-                        onPress: () => leaveMutation.mutate(),
-                      },
-                    ]
-                  );
-                }}
-                variant="outline"
-                fullWidth
-                style={styles.leaveButton}
-              />
-            )}
+            )}        
           </View>
 
           <View style={styles.tabsContainer}>
@@ -696,15 +634,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.xl,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.md,
   },
   headerTop: {
     flexDirection: "row",

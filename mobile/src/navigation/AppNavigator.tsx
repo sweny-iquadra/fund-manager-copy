@@ -151,6 +151,7 @@ function ContestsStackNavigator() {
         {({ navigation }) => (
           <ContestsScreen
             onNavigateToContest={(id) => navigation.navigate('ContestDetail', { contestId: id })}
+            onNavigateToCreateContest={() => navigation.navigate('CreateContest')}
           />
         )}
       </ContestsStack.Screen>
@@ -158,27 +159,32 @@ function ContestsStackNavigator() {
         {({ navigation, route }) => (
           <ContestDetailScreen
             contestId={(route.params as any).contestId}
-            onNavigateToPortfolio={(id) => navigation.navigate('Portfolio', { contestId: id })}
-            onGoBack={() => navigation.goBack()}
-          />
-        )}
-      </ContestsStack.Screen>
-      <ContestsStack.Screen name="Portfolio" options={{ headerShown: true, title: 'Portfolio' }}>
-        {({ navigation, route }) => (
-          <PortfolioScreen
-            contestId={(route.params as any).contestId}
+            onNavigateToPortfolio={(id) =>
+              navigation.getParent()?.navigate('PortfolioTab', {
+                screen: 'Portfolio',
+                params: { contestId: id },
+              })
+            }
             onGoBack={() => navigation.goBack()}
           />
         )}
       </ContestsStack.Screen>
       <ContestsStack.Screen
         name="CreateContest"
-        options={{ headerShown: true, title: 'Create Contest' }}
+        options={{ headerShown: false }}
       >
         {({ navigation }) => (
           <CreateContestScreen
-            onGoBack={() => navigation.goBack()}
-            onSuccess={() => navigation.goBack()}
+            onGoBack={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate('Contests');
+              }
+            }}
+            onSuccess={() => {
+              navigation.navigate('Contests');
+            }}
           />
         )}
       </ContestsStack.Screen>

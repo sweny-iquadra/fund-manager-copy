@@ -14,11 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Picker } from '@react-native-picker/picker';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '@/lib/theme';
-import { portfolioApi, stocksApi, contestsApi, api, assetsApi } from '@/lib/api';
+import { portfolioApi, stocksApi, contestsApi, api, assetsApi, SearchResult } from '@/lib/api';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Loading } from '@/components/ui/Loading';
 import { Badge } from '@/components/ui/Badge';
+import { SearchResultItem } from '@/components/portfolio/SearchResultItem';
 
 interface PortfolioScreenProps {
   contestId?: number;
@@ -59,17 +60,27 @@ export function PortfolioScreen({ contestId: initialContestId, onGoBack }: Portf
 
   const activeParticipations = useMemo(() => {
     if (!participations || !allContests) return [];
-    return participations.filter((p: any) => {
+    const uniqueByContest = new Map<number, any>();
+    participations.forEach((p: any) => {
       const contest = allContests.find((c: any) => c.id === p.contestId);
-      return contest && new Date(contest.endDate) > new Date();
+      if (!contest) return;
+      if (!uniqueByContest.has(p.contestId)) {
+        uniqueByContest.set(p.contestId, { ...p, contest });
+      }
+    });
+    return Array.from(uniqueByContest.values()).filter((p: any) => {
+      return p.contest && new Date(p.contest.endDate) > new Date();
     });
   }, [participations, allContests]);
 
   useEffect(() => {
-    if (activeParticipations.length > 0 && !selectedContestId) {
-      const firstParticipation = activeParticipations[0];
-      setSelectedContestId(firstParticipation.contestId);
+    if (activeParticipations.length === 0) return;
+    if (selectedContestId) {
+      const exists = activeParticipations.some((p: any) => p.contestId === selectedContestId);
+      if (exists) return;
     }
+    const firstParticipation = activeParticipations[0];
+    setSelectedContestId(firstParticipation.contestId);
   }, [activeParticipations, selectedContestId]);
 
   const contestId = selectedContestId || initialContestId;
@@ -150,7 +161,7 @@ export function PortfolioScreen({ contestId: initialContestId, onGoBack }: Portf
   const maxInvestments = contest?.category?.maxInvestments || 10;
   const isAllocationOpen = contest ? new Date(contest.closeDate) > new Date() : false;
 
-  const addStock = (stock: any) => {
+  const addStock = (stock: SearchResult & { currentPrice?: number }) => {
     if (allocations.length >= maxInvestments) {
       Alert.alert('Limit Reached', `Maximum ${maxInvestments} investments allowed`);
       return;
@@ -166,6 +177,7 @@ export function PortfolioScreen({ contestId: initialContestId, onGoBack }: Portf
         companyName: stock.name || stock.symbol,
         allocation: 0,
         amount: 0,
+        currentPrice: stock.currentPrice,
       },
     ]);
     setSearchQuery('');
@@ -253,7 +265,7 @@ export function PortfolioScreen({ contestId: initialContestId, onGoBack }: Portf
   ];
 
   const renderContestSelector = () => {
-    if (activeParticipations.length <= 1) return null;
+    if (activeParticipations.length === 0) return null;
 
     return (
       <Card style={styles.selectorCard}>
@@ -271,7 +283,7 @@ export function PortfolioScreen({ contestId: initialContestId, onGoBack }: Portf
               style={styles.picker}
             >
               {activeParticipations.map((p: any) => {
-                const c = allContests?.find((c: any) => c.id === p.contestId);
+                const c = allContests?.find((contest: any) => contest.id === p.contestId);
                 return (
                   <Picker.Item
                     key={p.contestId}
@@ -385,20 +397,20 @@ export function PortfolioScreen({ contestId: initialContestId, onGoBack }: Portf
 
             {searchLoading && <Loading size="small" text="Searching..." />}
 
+            {searchQuery.length >= 2 && !searchLoading && searchResults && searchResults.length === 0 && (
+              <View style={styles.noResults}>
+                <Text style={styles.noResultsText}>No results found for "{searchQuery}"</Text>
+              </View>
+            )}
+
             {searchResults && searchResults.length > 0 && (
               <View style={styles.searchResults}>
-                {searchResults.slice(0, 5).map((stock: any) => (
-                  <TouchableOpacity
+                {searchResults.slice(0, 8).map((stock: SearchResult) => (
+                  <SearchResultItem
                     key={stock.symbol}
-                    style={styles.searchResult}
-                    onPress={() => addStock(stock)}
-                  >
-                    <View>
-                      <Text style={styles.stockSymbol}>{stock.symbol}</Text>
-                      <Text style={styles.stockName} numberOfLines={1}>{stock.name || stock.companyName}</Text>
-                    </View>
-                    <Ionicons name="add-circle-outline" size={24} color={colors.primary} />
-                  </TouchableOpacity>
+                    company={stock}
+                    onSelect={addStock}
+                  />
                 ))}
               </View>
             )}
@@ -427,6 +439,14 @@ export function PortfolioScreen({ contestId: initialContestId, onGoBack }: Portf
                 <View style={styles.allocationInfo}>
                   <Text style={styles.allocationSymbol}>{allocation.symbol}</Text>
                   <Text style={styles.allocationName} numberOfLines={1}>{allocation.companyName}</Text>
+                  <View style={styles.allocationMeta}>
+                    <Text style={styles.metaText}>
+                      {formatPercent(allocation.allocation)} • {formatCurrency(allocation.amount)}
+                    </Text>
+                    <Text style={styles.metaText}>
+                      Current: {allocation.currentPrice ? formatCurrency(allocation.currentPrice) : '--'}
+                    </Text>
+                  </View>
                 </View>
                 <View style={styles.allocationControls}>
                   <View style={styles.inputGroup}>
@@ -918,7 +938,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingTop: spacing.md,
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+  },
+  noResults: {
+    padding: spacing.lg,
+    alignItems: 'center',
+  },
+  noResultsText: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
   searchResult: {
     flexDirection: 'row',
@@ -980,6 +1010,16 @@ const styles = StyleSheet.create({
   },
   allocationName: {
     fontSize: fontSize.sm,
+    color: colors.textSecondary,
+  },
+  allocationMeta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginTop: 2,
+  },
+  metaText: {
+    fontSize: fontSize.xs,
     color: colors.textSecondary,
   },
   allocationControls: {

@@ -92,10 +92,13 @@ export function ContestCard({ contest, onPress }: ContestCardProps) {
         )}
       </View>
 
-      <View style={styles.contestType}>
-        <Text style={styles.contestTypeText}>
-          {contest.contestType === 'classic' ? 'Classic' : 'Eliminator'}
-        </Text>
+      <View style={styles.typeChipRow}>
+        <View style={styles.typeChip}>
+          <Text style={styles.contestTypeText}>
+            {contest.contestType === 'classic' ? 'Classic' : 'Eliminator'}
+          </Text>
+        </View>
+        <Badge label={contest.mode?.name || ''} variant="outline" size="sm" />
       </View>
     </TouchableOpacity>
   );
@@ -179,10 +182,14 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textSecondary,
   },
-  contestType: {
-    position: 'absolute',
-    top: spacing.sm,
-    right: spacing.sm,
+  typeChipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  typeChip: {
     backgroundColor: colors.gray[100],
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,

@@ -209,6 +209,7 @@ export function LeaderboardScreen({ onNavigateToContest }: LeaderboardScreenProp
                   key={entry.id || index}
                   entry={entry}
                   isCurrentUser={entry.userId === user?.id}
+                  prizePool={selectedContest ? parseFloat(selectedContest.prizePool || '0') : undefined}
                 />
               ))
             ) : (

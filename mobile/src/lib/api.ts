@@ -27,7 +27,7 @@ class ApiClient {
     const { method = 'GET', body, headers = {} } = options;
 
     const token = await this.getAuthToken();
-    
+
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       ...headers,
@@ -77,15 +77,15 @@ export const api = new ApiClient(API_BASE_URL);
 export const authApi = {
   login: (email: string, password: string) =>
     api.post<{ accessToken: string; refreshToken: string; user: any }>('/api/auth/login', { email, password }),
-  
+
   register: (data: { email: string; password: string; firstName: string; lastName: string }) =>
     api.post<{ accessToken: string; refreshToken: string; user: any }>('/api/auth/register', data),
-  
+
   getUser: () => api.get<any>('/api/auth/user'),
-  
+
   refreshToken: (refreshToken: string) =>
     api.post<{ accessToken: string; refreshToken: string }>('/api/auth/refresh', { refreshToken }),
-  
+
   logout: () => api.post('/api/auth/logout'),
 };
 
@@ -94,11 +94,11 @@ export const contestsApi = {
     const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
     return api.get<any[]>(`/api/contests${queryString}`);
   },
-  
+
   getById: (id: number) => api.get<any>(`/api/contests/${id}`),
-  
+
   join: (id: number) => api.post<any>(`/api/contests/${id}/join`),
-  
+
   leave: (id: number) => api.delete<any>(`/api/contests/${id}/leave`),
 
   getLeaderboard: (id: number) => api.get<any[]>(`/api/contests/${id}/leaderboard`),
@@ -110,10 +110,10 @@ export const contestRequestsApi = {
 
 export const portfolioApi = {
   get: (contestId: number) => api.get<any>(`/api/contests/${contestId}/portfolio`),
-  
+
   update: (contestId: number, allocations: any[]) =>
     api.put<any>(`/api/contests/${contestId}/portfolio`, { allocations }),
-  
+
   getPerformance: (contestId: number) => api.get<any>(`/api/contests/${contestId}/performance`),
 };
 
@@ -127,9 +127,9 @@ export const categoriesApi = {
 
 export const userApi = {
   getStats: () => api.get<any>('/api/user/stats'),
-  
+
   getTransactions: () => api.get<any[]>('/api/user/transactions'),
-  
+
   updateProfile: (data: any) => api.patch<any>('/api/user/profile', data),
 };
 
@@ -139,14 +139,37 @@ export const stocksApi = {
     if (category) params.append('category', category);
     return api.get<any[]>(`/api/stocks/search?${params}`);
   },
-  
+
   getQuote: (symbol: string) => api.get<any>(`/api/stocks/quote/${symbol}`),
+
+  getPrice: (symbol: string) => api.get<StockPrice>(`/api/stocks/price/${symbol}`),
+};
+
+export const cryptoApi = {
+  getPrice: (symbol: string) => api.get<StockPrice>(`/api/crypto/price/${symbol}`),
 };
 
 export const assetsApi = {
   search: (query: string, category?: string) => {
     const params = new URLSearchParams({ q: query });
     if (category) params.append('category', category);
-    return api.get<any[]>(`/api/assets/search?${params}`);
+    return api.get<SearchResult[]>(`/api/assets/search?${params}`);
   },
 };
+
+export interface SearchResult {
+  symbol: string;
+  name: string;
+  type: string;
+  currentPrice?: number;
+  change?: number;
+  changePercent?: number;
+}
+
+export interface StockPrice {
+  symbol: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  timestamp: number;
+}
