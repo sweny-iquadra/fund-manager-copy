@@ -6,8 +6,10 @@ import {
   StyleSheet,
   ViewStyle,
   TextInputProps,
-  TouchableOpacity,
+  StyleProp,
+  TextStyle,
 } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, borderRadius, spacing, fontSize } from '@/lib/theme';
 
@@ -19,6 +21,7 @@ interface InputProps extends Omit<TextInputProps, 'style'> {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   isPassword?: boolean;
+  style?: StyleProp<TextStyle>;
 }
 
 export function Input({
@@ -29,6 +32,7 @@ export function Input({
   leftIcon,
   rightIcon,
   isPassword,
+  style,
   ...props
 }: InputProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -46,7 +50,7 @@ export function Input({
       >
         {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
         <TextInput
-          style={[styles.input, leftIcon && styles.inputWithLeftIcon]}
+          style={[styles.input, leftIcon && styles.inputWithLeftIcon, style as any]}
           placeholderTextColor={colors.textMuted}
           secureTextEntry={isPassword && !showPassword}
           onFocus={() => setIsFocused(true)}

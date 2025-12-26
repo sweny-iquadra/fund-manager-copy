@@ -57,7 +57,12 @@ export function UploadDemoScreen() {
       }
 
       const data = await response.json();
-      const fileUrl = data.url;
+      const fileUrl: string =
+        typeof data.url === 'string' && data.url.length > 0
+          ? data.url.startsWith('http')
+            ? data.url
+            : `${API_BASE_URL}${data.url}`
+          : '';
 
       if (target === 'profile') setProfileImage(fileUrl);
       if (target === 'banner') setContestBanner(fileUrl);

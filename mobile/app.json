@@ -24,7 +24,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2196F3"
       },
-      "package": "com.financefantasy.app"
+      "package": "com.financefantasy.app",
+      "softwareKeyboardLayoutMode": "pan",
+      "navigationBarColor": "#FFFFFF",
+      "navigationBarStyle": "dark-content"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -32,7 +35,20 @@
     },
     "plugins": [
       "expo-secure-store",
-      "@react-native-community/datetimepicker"
-    ]
+      "@react-native-community/datetimepicker",
+      [
+        "expo-navigation-bar",
+        {
+          "position": "absolute",
+          "visibility": "hidden",
+          "behavior": "overlay-swipe"
+        }
+      ]
+    ],
+    "androidNavigationBar": {
+      "visible": "sticky-immersive",
+      "barStyle": "dark-content",
+      "backgroundColor": "#FFFFFF"
+    }
   }
 }

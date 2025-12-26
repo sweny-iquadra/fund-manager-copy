@@ -1,12 +1,12 @@
 import React from 'react';
 import {
-  TouchableOpacity,
   Text,
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { colors, borderRadius, spacing, fontSize, fontWeight } from '@/lib/theme';
 
 interface ButtonProps {
